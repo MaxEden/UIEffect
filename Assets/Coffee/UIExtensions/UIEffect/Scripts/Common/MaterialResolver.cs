@@ -34,14 +34,14 @@ namespace Coffee.UIExtensions
 			mat = GetMaterial(shader, append);
 			if (mat)
 			{
-				if (!mat.shaderKeywords.OrderBy(x => x).SequenceEqual(keywords.OrderBy(x => x)))
+				//if (!mat.shaderKeywords.OrderBy(x => x).SequenceEqual(keywords.OrderBy(x => x)))
 				{
 					mat.shaderKeywords = keywords;
-					EditorUtility.SetDirty(mat);
-					if (!Application.isPlaying)
-					{
-						EditorApplication.delayCall += AssetDatabase.SaveAssets;
-					}
+					// EditorUtility.SetDirty(mat);
+					// if (!Application.isPlaying)
+					// {
+					// 	EditorApplication.delayCall += AssetDatabase.SaveAssets;
+					// }
 				}
 				return mat;
 			}

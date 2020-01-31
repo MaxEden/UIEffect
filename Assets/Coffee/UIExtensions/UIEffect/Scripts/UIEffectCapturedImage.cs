@@ -354,11 +354,32 @@ namespace Coffee.UIExtensions
 			int w, h;
 			GetDesamplingSize(DesamplingRate.None, out w, out h);
 			s_CommandBuffer.GetTemporaryRT(s_CopyId, w, h, 0, m_FilterMode);
+//#if UNITY_EDITOR
+//			s_CommandBuffer.Blit (Resources.FindObjectsOfTypeAll<RenderTexture> ().FirstOrDefault (x => x.name == "GameView RT"), s_CopyId);
+//#else
+//			s_CommandBuffer.Blit(BuiltinRenderTextureType.BindableTexture, s_CopyId);
+//#endif
 #if UNITY_EDITOR
-			s_CommandBuffer.Blit(Resources.FindObjectsOfTypeAll<RenderTexture>().FirstOrDefault(x => x.name == "GameView RT"), s_CopyId);
-#else
-			s_CommandBuffer.Blit(BuiltinRenderTextureType.BindableTexture, s_CopyId);
+			if (!Application.isPlaying)
+			{
+				s_CommandBuffer.Blit (Resources.FindObjectsOfTypeAll<RenderTexture> ().FirstOrDefault (x => x.name == "GameView RT"), s_CopyId);
+			}
+			else
 #endif
+			{
+				s_CommandBuffer.Blit (BuiltinRenderTextureType.BindableTexture, s_CopyId);
+
+				//if (!s_renderedResult)
+				//{
+				//	s_renderedResult = new Texture2D (Screen.width, Screen.height, TextureFormat.ARGB32, false, false);
+				//	s_renderedResult.filterMode = FilterMode.Point;
+				//}
+				//else if (s_renderedResult.width != Screen.width || s_renderedResult.height != Screen.height)
+				//{
+				//	s_renderedResult.Resize (Screen.width, Screen.height, TextureFormat.ARGB32, false);
+				//}
+				//s_CommandBuffer.Blit (new RenderTargetIdentifier (s_renderedResult), s_CopyId);
+			}
 
 			// Set properties for effect.
 			s_CommandBuffer.SetGlobalVector(s_EffectFactorId, new Vector4(m_EffectFactor, 0));
@@ -482,12 +503,13 @@ namespace Coffee.UIExtensions
 		static int s_EffectFactorId;
 		static int s_ColorFactorId;
 		static CommandBuffer s_CommandBuffer;
+		public Texture2D s_renderedResult;
 
 		/// <summary>
 		/// Release genarated objects.
 		/// </summary>
 		/// <param name="releaseRT">If set to <c>true</c> release cached RenderTexture.</param>
-		void _Release(bool releaseRT)
+		void _Release (bool releaseRT)
 		{
 			if (releaseRT)
 			{
@@ -534,18 +556,31 @@ namespace Coffee.UIExtensions
 		IEnumerator _CoUpdateTextureOnNextFrame()
 		{
 			yield return new WaitForEndOfFrame();
-			UpdateTexture();
+			//if (s_renderedResult)
+			//{
+			//	s_renderedResult.ReadPixels (new Rect (0, 0, Screen.width, Screen.height), 0, 0);
+			//	s_renderedResult.Apply (false, false);
+			//}
+
+			UpdateTexture ();
 		}
 
-		void UpdateTexture()
+
+
+		void UpdateTexture ()
 		{
-#if !UNITY_EDITOR
-			// Execute command buffer.
-			Graphics.ExecuteCommandBuffer (s_CommandBuffer);
+
+#if UNITY_EDITOR
+			if (Application.isPlaying)
 #endif
-			_Release(false);
+			{
+				Graphics.ExecuteCommandBuffer (s_CommandBuffer);
+			}
+
+			_Release (false);
 			texture = capturedTexture;
 			_SetDirty();
+
 		}
 
 	}
